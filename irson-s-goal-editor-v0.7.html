@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irson's Goal Editor - Professional Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <button onclick="goHome()" class="w-10 h-10 rounded-xl bg-blue-900 flex items-center justify-center text-white font-bold text-xl shadow-md hover:bg-blue-800 transition" title="Go to Dashboard Home">I</button>
+                <div>
+                    <h1 id="header-app-title" class="text-xl font-bold text-blue-950 uppercase tracking-wider">Irson's Goal</h1>
+                    <p class="text-xs text-slate-500">Professional Interactive Roadmap & Section Editor</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end flex-wrap gap-y-2">
+                <!-- Home Button -->
+                <button onclick="goHome()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-xs transition flex items-center space-x-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span>Home</span>
+                </button>
+
+                <!-- Visibility Status Selector -->
+                <div class="relative">
+                    <select id="visibility-select" onchange="updateVisibility(this.value)" class="bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Private">🔒 Private</option>
+                        <option value="Unlisted">🔗 Unlisted</option>
+                        <option value="Public">🌐 Public</option>
+                    </select>
+                </div>
+
+                <!-- Mode Toggle -->
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200">
+                    <button id="btn-view-mode" onclick="setMode('view')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-blue-900 shadow-xs">View Mode</button>
+                    <button id="btn-edit-mode" onclick="setMode('edit')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">Editor Mode</button>
+                </div>
+
+                <!-- Add Goal Button (Editor Mode Only) -->
+                <button id="btn-add-goal" onclick="openGoalModal()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition flex items-center space-x-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Add Goal</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 py-8 w-full flex-grow space-y-8">
+        
+        <!-- Progress Dashboard -->
+        <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Roadmap Progress Overview</h2>
+                    <p class="text-sm text-slate-500">Track milestones towards the ultimate future in <span id="display-app-name">Irson's Goal</span>.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="progress-text" class="text-2xl font-black text-blue-900">0%</span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">Completed</span>
+                </div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+                <div id="progress-bar" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </section>
+
+        <!-- Filters and Search Bar -->
+        <section class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                <button onclick="filterGoals('all')" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-blue-900 text-white shadow-xs transition" data-filter="all">All Goals</button>
+                <button onclick="filterGoals('active')" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-filter="active">In Progress</button>
+                <button onclick="filterGoals('completed')" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-filter="completed">Achieved</button>
+            </div>
+            <div class="w-full sm:w-72">
+                <input type="text" id="search-input" oninput="handleSearch()" placeholder="Search goals..." class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs">
+            </div>
+        </section>
+
+        <!-- Goals List Section -->
+        <section id="goals-container" class="space-y-4">
+            <!-- Dynamic Cards inserted via JavaScript -->
+        </section>
+
+        <!-- Focus Areas Section (Fully Editable) -->
+        <section class="bg-blue-50 border border-blue-200 rounded-2xl p-6 shadow-sm relative">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-blue-950 font-bold text-base flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span id="focus-section-title">Achieved by focusing on:</span>
+                </h3>
+                <button onclick="openEditSectionModal('focus')" class="editor-only-control hidden text-xs bg-blue-600 text-white px-3 py-1 rounded-lg font-semibold hover:bg-blue-700 transition">Edit Box</button>
+            </div>
+            <ol id="focus-areas-list" class="list-decimal list-inside space-y-2 text-slate-800 font-semibold text-sm pl-2">
+                <!-- Dynamic Items -->
+            </ol>
+        </section>
+
+        <!-- Core Principles & Daily Commitments Section (Fully Editable) -->
+        <section class="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 shadow-sm relative">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-emerald-950 font-bold text-base flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span>Core Principles & Daily Commitments</span>
+                </h3>
+                <button onclick="openEditSectionModal('principles')" class="editor-only-control hidden text-xs bg-emerald-600 text-white px-3 py-1 rounded-lg font-semibold hover:bg-emerald-700 transition">Edit Box</button>
+            </div>
+            <ul id="principles-list" class="space-y-2 text-slate-800 text-sm pl-2 list-disc list-inside">
+                <!-- Dynamic Items -->
+            </ul>
+        </section>
+
+        <!-- Country Rankings & Preferences Section (Fully Editable) -->
+        <section class="bg-amber-50 border border-amber-200 rounded-2xl p-6 shadow-sm relative">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-amber-950 font-bold text-base flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Country Rankings & Geographic Preferences</span>
+                </h3>
+                <button onclick="openEditSectionModal('countries')" class="editor-only-control hidden text-xs bg-amber-600 text-white px-3 py-1 rounded-lg font-semibold hover:bg-amber-700 transition">Edit Box</button>
+            </div>
+            <ul id="countries-list" class="space-y-2 text-slate-800 text-sm pl-2 list-disc list-inside">
+                <!-- Dynamic Items -->
+            </ul>
+        </section>
+
+        <!-- AI Assistant Simulator Section -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">AI</div>
+                    <h3 class="font-bold text-slate-900 text-base" id="ai-section-title">Irson's Goal AI Strategy Advisor</h3>
+                </div>
+                <span class="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Gemini Powered</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Simulate AI analysis to generate a tactical breakdown and milestone path for any goal.</p>
+            <div class="flex gap-2">
+                <select id="ai-goal-select" class="flex-grow px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Select a goal for AI breakdown...</option>
+                </select>
+                <button onclick="runAiBreakdown()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-md transition whitespace-nowrap">
+                    <span>Generate AI Plan</span>
+                </button>
+            </div>
+            <div id="ai-output-container" class="mt-4 hidden bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-xs text-slate-700 leading-relaxed">
+                <!-- AI Output appears here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Declarations (Fully Editable) -->
+    <footer class="bg-white border-t border-slate-200 py-8 px-4 text-center text-xs text-slate-500 space-y-2 relative">
+        <div id="footer-notes-container" class="space-y-1.5">
+            <!-- Dynamic Footer Declarations -->
+        </div>
+        <div class="pt-2">
+            <button onclick="openEditSectionModal('footer')" class="editor-only-control hidden text-[11px] bg-slate-800 text-white px-3 py-1 rounded-lg font-semibold hover:bg-slate-900 transition">Edit Footer Declarations</button>
+        </div>
+    </footer>
+
+    <!-- Add/Edit Goal Modal -->
+    <div id="goal-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="font-bold text-slate-900 text-lg">Add New Goal</h3>
+                <button onclick="closeGoalModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="goal-form" onsubmit="saveGoal(event)" class="space-y-4">
+                <input type="hidden" id="goal-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Goal Description</label>
+                    <textarea id="goal-text" rows="3" required placeholder="Enter detailed goal statement..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Target Date / Year</label>
+                    <input type="text" id="goal-target" required placeholder="e.g. October 1, 2027" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeGoalModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md transition">Save Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Section Content Modal (Focus, Principles, Countries, Footer) -->
+    <div id="section-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="section-modal-title" class="font-bold text-slate-900 text-lg">Edit Section Content</h3>
+                <button onclick="closeSectionModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <p id="section-modal-desc" class="text-xs text-slate-500 mb-3">Enter items separated by newlines.</p>
+            <form onsubmit="saveSectionContent(event)" class="space-y-4">
+                <input type="hidden" id="section-key">
+                <div>
+                    <textarea id="section-textarea" rows="6" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeSectionModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md transition">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-slate-950/30 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center">
+            <h4 id="notification-title" class="font-bold text-slate-900 text-base mb-2">Notice</h4>
+            <p id="notification-message" class="text-xs text-slate-600 mb-5">Message goes here.</p>
+            <button onclick="closeNotification()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition">Got it</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial Default State
+        const defaultState = {
+            appName: "Irson's Goal",
+            visibility: "Private", // Private, Unlisted, Public
+            goals: [
+                { id: 1, text: "All ears are good listening, healed, and able to hear more clearly.", target: "Present & Continuous", completed: false },
+                { id: 2, text: "The whole body is complete, perfect, functioning well, and normal.", target: "Present & Continuous", completed: false },
+                { id: 3, text: "Single, no girlfriend, live together with Dad, Mom, and Kelly, no need to think about girls anymore.", target: "Present & Continuous", completed: false },
+                { id: 4, text: "God has given us to live in the best country for us, which is live in the United States.", target: "Present & Continuous", completed: false },
+                { id: 5, text: "Finished Learning Web Development.", target: "October 1, 2027", completed: false },
+                { id: 6, text: "I want to work remotely for a U.S. company.", target: "November 30, 2027", completed: false },
+                { id: 7, text: "Get medical treatment for Grandma (Nainai) in the United States, so that Grandma stays healthy and lives a long life.", target: "October 1, 2028", completed: false },
+                { id: 8, text: "Buy a Tesla car to take road trips around New York, Long Island, Upstate, and out of state; travel around the United States, no need to travel abroad anymore.", target: "May 15, 2029", completed: false },
+                { id: 9, text: "Buy a home at 83-45 Vietor Avenue, Elmhurst, Queens, New York; live in the United States, the best country, no need to move, no need to think about other countries anymore.", target: "June 30, 2030", completed: false },
+                { id: 10, text: "We live and travel in the United States, visit family in Indonesia; only 2 countries, no need to go anywhere else abroad.", target: "January 1, 2035", completed: false }
+            ],
+            focusAreas: [
+                "Learning Web Development",
+                "Learning English",
+                "Learning Chinese (Simplified)"
+            ],
+            principles: [
+                "Maintain absolute clarity, discipline, and daily commitment to the roadmap.",
+                "Prioritize health, spiritual peace, family bond with Dad, Mom, and Kelly.",
+                "Focus exclusively on building our future in the United States."
+            ],
+            countries: [
+                "United States: Primary home country, best place to live permanently.",
+                "Indonesia: Family visits only; no other countries required."
+            ],
+            footerNotes: [
+                "I want this to become real in the future in Irson's Goal.",
+                "All of this is completely true in Irson's Goal.",
+                "Dad, Mom, Kelly, and I all remember this very well in Irson's Goal.",
+                "I want these dreams to be achieved in Irson's Goal."
+            ]
+        };
+
+        // Load data from LocalStorage or Fallback to default
+        let appData = JSON.parse(localStorage.getItem('irson_pro_goal_data')) || defaultState;
+        let currentMode = 'view'; // 'view' or 'edit'
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        // Save to LocalStorage
+        function persistData() {
+            localStorage.setItem('irson_pro_goal_data', JSON.stringify(appData));
+        }
+
+        // Navigation Home Action
+        function goHome() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showNotification("Dashboard Home", "You are at the main overview of " + appData.appName + ".");
+        }
+
+        // Visibility Selector
+        function updateVisibility(val) {
+            appData.visibility = val;
+            persistData();
+            showNotification("Visibility Updated", "Roadmap visibility is now set to: " + val);
+        }
+
+        // Mode Switching (View vs Edit)
+        function setMode(mode) {
+            currentMode = mode;
+            const viewBtn = document.getElementById('btn-view-mode');
+            const editBtn = document.getElementById('btn-edit-mode');
+            const addBtn = document.getElementById('btn-add-goal');
+            const editorControls = document.querySelectorAll('.editor-only-control');
+
+            if (mode === 'view') {
+                viewBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-blue-900 shadow-xs";
+                editBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                addBtn.classList.add('hidden');
+                editorControls.forEach(el => el.classList.add('hidden'));
+            } else {
+                editBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-blue-900 shadow-xs";
+                viewBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                addBtn.classList.remove('hidden');
+                editorControls.forEach(el => el.classList.remove('hidden'));
+            }
+            renderAll();
+        }
+
+        // Master Render Engine
+        function renderAll() {
+            // Update app titles dynamically
+            document.getElementById('header-app-title').innerText = appData.appName;
+            document.getElementById('display-app-name').innerText = appData.appName;
+            document.getElementById('ai-section-title').innerText = appData.appName + " AI Strategy Advisor";
+            document.getElementById('visibility-select').value = appData.visibility;
+
+            renderGoals();
+            renderFocusAreas();
+            renderPrinciples();
+            renderCountries();
+            renderFooterNotes();
+            updateAiSelect();
+        }
+
+        // Render Goals
+        function renderGoals() {
+            const container = document.getElementById('goals-container');
+            container.innerHTML = '';
+
+            let filtered = appData.goals.filter(goal => {
+                const matchesSearch = goal.text.toLowerCase().includes(searchQuery.toLowerCase()) || goal.target.toLowerCase().includes(searchQuery.toLowerCase());
+                if (currentFilter === 'active') return !goal.completed && matchesSearch;
+                if (currentFilter === 'completed') return goal.completed && matchesSearch;
+                return matchesSearch;
+            });
+
+            // Update Progress Bar
+            const completedCount = appData.goals.filter(g => g.completed).length;
+            const percent = appData.goals.length > 0 ? Math.round((completedCount / appData.goals.length) * 100) : 0;
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-text').innerText = percent + '%';
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-8 text-center border border-slate-200 text-slate-400 text-xs">
+                        No goals found matching your criteria.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach((goal) => {
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl p-5 border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm ${goal.completed ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 hover:border-blue-300'}`;
+                
+                let actionButtonsHTML = '';
+                if (currentMode === 'edit') {
+                    actionButtonsHTML = `
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <button onclick="openGoalModal(${goal.id})" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">Edit</button>
+                            <button onclick="deleteGoal(${goal.id})" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition">Delete</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-start space-x-3.5 flex-grow">
+                        <input type="checkbox" ${goal.completed ? 'checked' : ''} onclick="toggleComplete(${goal.id})" class="mt-1 w-5 h-5 text-blue-600 rounded cursor-pointer accent-blue-600">
+                        <div>
+                            <p class="text-sm font-medium ${goal.completed ? 'line-through text-slate-400' : 'text-slate-800'}">${escapeHtml(goal.text)}</p>
+                            <div class="mt-2 flex items-center space-x-2">
+                                <span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-100">Target: ${escapeHtml(goal.target)}</span>
+                                ${goal.completed ? '<span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">Achieved</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${actionButtonsHTML}
+                `;
+                container.appendChild(card);
+            });
+            persistData();
+        }
+
+        // Render Focus Areas
+        function renderFocusAreas() {
+            const list = document.getElementById('focus-areas-list');
+            list.innerHTML = '';
+            appData.focusAreas.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "hover:text-blue-700 transition";
+                li.innerText = item;
+                list.appendChild(li);
+            });
+        }
+
+        // Render Principles
+        function renderPrinciples() {
+            const list = document.getElementById('principles-list');
+            list.innerHTML = '';
+            appData.principles.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "hover:text-emerald-700 transition";
+                li.innerText = item;
+                list.appendChild(li);
+            });
+        }
+
+        // Render Countries
+        function renderCountries() {
+            const list = document.getElementById('countries-list');
+            list.innerHTML = '';
+            appData.countries.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "hover:text-amber-700 transition";
+                li.innerText = item;
+                list.appendChild(li);
+            });
+        }
+
+        // Render Footer Notes
+        function renderFooterNotes() {
+            const container = document.getElementById('footer-notes-container');
+            container.innerHTML = '';
+            appData.footerNotes.forEach(note => {
+                const p = document.createElement('p');
+                p.className = "font-medium text-slate-700";
+                p.innerText = note;
+                container.appendChild(p);
+            });
+        }
+
+        // Goal CRUD Actions
+        function saveGoal(e) {
+            e.preventDefault();
+            const id = document.getElementById('goal-id').value;
+            const text = document.getElementById('goal-text').value;
+            const target = document.getElementById('goal-target').value;
+
+            if (id) {
+                const goal = appData.goals.find(g => g.id == id);
+                if (goal) {
+                    goal.text = text;
+                    goal.target = target;
+                }
+            } else {
+                const newGoal = {
+                    id: Date.now(),
+                    text: text,
+                    target: target,
+                    completed: false
+                };
+                appData.goals.push(newGoal);
+            }
+            closeGoalModal();
+            renderAll();
+        }
+
+        function deleteGoal(id) {
+            appData.goals = appData.goals.filter(g => g.id !== id);
+            renderAll();
+        }
+
+        function toggleComplete(id) {
+            const goal = appData.goals.find(g => g.id === id);
+            if (goal) {
+                goal.completed = !goal.completed;
+                renderAll();
+            }
+        }
+
+        // Filter & Search
+        function filterGoals(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.className = "filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-blue-900 text-white shadow-xs transition";
+                } else {
+                    btn.className = "filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition";
+                }
+            });
+            renderGoals();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('search-input').value;
+            renderGoals();
+        }
+
+        // Modal Controls for Goals
+        function openGoalModal(id = null) {
+            const modal = document.getElementById('goal-modal');
+            modal.classList.remove('hidden');
+            if (id) {
+                document.getElementById('modal-title').innerText = "Edit Goal";
+                const goal = appData.goals.find(g => g.id === id);
+                document.getElementById('goal-id').value = goal.id;
+                document.getElementById('goal-text').value = goal.text;
+                document.getElementById('goal-target').value = goal.target;
+            } else {
+                document.getElementById('modal-title').innerText = "Add New Goal";
+                document.getElementById('goal-form').reset();
+                document.getElementById('goal-id').value = '';
+            }
+        }
+
+        function closeGoalModal() {
+            document.getElementById('goal-modal').classList.add('hidden');
+        }
+
+        // Modal Controls for Sections (Focus, Principles, Countries, Footer)
+        function openEditSectionModal(key) {
+            const modal = document.getElementById('section-modal');
+            const titleEl = document.getElementById('section-modal-title');
+            const textarea = document.getElementById('section-textarea');
+            document.getElementById('section-key').value = key;
+            modal.classList.remove('hidden');
+
+            let currentArray = [];
+            if (key === 'focus') {
+                titleEl.innerText = "Edit Focus Areas";
+                currentArray = appData.focusAreas;
+            } else if (key === 'principles') {
+                titleEl.innerText = "Edit Core Principles & Commitments";
+                currentArray = appData.principles;
+            } else if (key === 'countries') {
+                titleEl.innerText = "Edit Country Rankings";
+                currentArray = appData.countries;
+            } else if (key === 'footer') {
+                titleEl.innerText = "Edit Footer Declarations";
+                currentArray = appData.footerNotes;
+            }
+            textarea.value = currentArray.join('\n');
+        }
+
+        function closeSectionModal() {
+            document.getElementById('section-modal').classList.add('hidden');
+        }
+
+        function saveSectionContent(e) {
+            e.preventDefault();
+            const key = document.getElementById('section-key').value;
+            const textValue = document.getElementById('section-textarea').value;
+            const lines = textValue.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+            if (key === 'focus') appData.focusAreas = lines;
+            else if (key === 'principles') appData.principles = lines;
+            else if (key === 'countries') appData.countries = lines;
+            else if (key === 'footer') appData.footerNotes = lines;
+
+            persistData();
+            closeSectionModal();
+            renderAll();
+            showNotification("Success", "Section updated successfully.");
+        }
+
+        // Notifications
+        function showNotification(title, message) {
+            document.getElementById('notification-title').innerText = title;
+            document.getElementById('notification-message').innerText = message;
+            document.getElementById('notification-modal').classList.remove('hidden');
+        }
+
+        function closeNotification() {
+            document.getElementById('notification-modal').classList.add('hidden');
+        }
+
+        // AI Assistant Simulator
+        function updateAiSelect() {
+            const select = document.getElementById('ai-goal-select');
+            select.innerHTML = '<option value="">Select a goal for AI breakdown...</option>';
+            appData.goals.forEach(goal => {
+                const opt = document.createElement('option');
+                opt.value = goal.id;
+                opt.innerText = goal.text.substring(0, 60) + (goal.text.length > 60 ? '...' : '');
+                select.appendChild(opt);
+            });
+        }
+
+        function runAiBreakdown() {
+            const goalId = document.getElementById('ai-goal-select').value;
+            const outputContainer = document.getElementById('ai-output-container');
+            
+            if (!goalId) {
+                showNotification("Selection Required", "Please select a goal from the dropdown to run the AI strategy analysis.");
+                return;
+            }
+
+            const goal = appData.goals.find(g => g.id == goalId);
+            outputContainer.classList.remove('hidden');
+            outputContainer.innerHTML = `<div class="animate-pulse flex items-center space-x-2 text-indigo-600"><div class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div><span>Analyzing milestone with Gemini AI...</span></div>`;
+
+            setTimeout(() => {
+                outputContainer.innerHTML = `
+                    <h4 class="font-bold text-indigo-950 mb-2 uppercase tracking-wide text-[11px]">AI Strategic Action Plan for: "${escapeHtml(goal.text)}"</h4>
+                    <ul class="space-y-1.5 list-disc list-inside text-slate-700">
+                        <li><strong>Target Milestone Date:</strong> ${escapeHtml(goal.target)}</li>
+                        <li><strong>Primary Focus Alignment:</strong> Consistent daily dedication to Web Development, English, and Chinese.</li>
+                        <li><strong>Step 1:</strong> Establish foundational knowledge and weekly milestone reviews.</li>
+                        <li><strong>Step 2:</strong> Network with U.S.-based remote tech professionals and mentors.</li>
+                        <li><strong>Step 3:</strong> Execute systematic saving and roadmap tracking directly in ${escapeHtml(appData.appName)}.</li>
+                    </ul>
+                `;
+            }, 800);
+        }
+
+        // Helper security utility
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Initialize on load
+        renderAll();
+    </script>
+</body>
+</html>
