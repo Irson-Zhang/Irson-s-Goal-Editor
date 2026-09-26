@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irson's Goal Editor - Professional Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <button onclick="switchView('dashboard')" class="w-10 h-10 rounded-xl bg-blue-900 flex items-center justify-center text-white font-bold text-xl shadow-md hover:bg-blue-800 transition">I</button>
+                <div>
+                    <h1 id="app-title-display" class="text-xl font-bold text-blue-950 uppercase tracking-wider">Irson's Goal</h1>
+                    <p class="text-xs text-slate-500">Professional Edition & Complete Roadmap Suite</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2.5 w-full sm:w-auto justify-end flex-wrap gap-y-2">
+                <!-- Home Button -->
+                <button onclick="switchView('dashboard')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center space-x-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span>Home</span>
+                </button>
+
+                <!-- Visibility Badge / Selector -->
+                <div class="relative">
+                    <select id="visibility-selector" onchange="updateVisibility(this.value)" class="text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <option value="private">🔒 Private</option>
+                        <option value="unlisted">🔗 Unlisted</option>
+                        <option value="public">🌍 Public</option>
+                    </select>
+                </div>
+
+                <!-- Mode Toggle -->
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200">
+                    <button id="btn-view-mode" onclick="setMode('view')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-blue-900 shadow-sm">View Mode</button>
+                    <button id="btn-edit-mode" onclick="setMode('edit')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">Editor Mode</button>
+                </div>
+
+                <!-- Add Goal Button (Only visible in Editor Mode) -->
+                <button id="btn-add-goal" onclick="openGoalModal()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-md transition flex items-center space-x-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Add Goal</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic View Container -->
+    <main class="max-w-5xl mx-auto px-4 py-8 w-full flex-grow">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="space-y-8">
+            <!-- Welcome Banner -->
+            <section class="bg-gradient-to-r from-blue-950 to-indigo-900 rounded-3xl p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <span class="bg-blue-500/30 text-blue-200 text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-widest border border-blue-400/30">Master Control Center</span>
+                    <h2 id="hero-welcome-name" class="text-2xl sm:text-3xl font-black mt-2">Irson's Goal Roadmap Suite</h2>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">Manage goals, focus areas, core principles, country rankings, and publishing privacy settings in one unified professional suite.</p>
+                </div>
+                <button onclick="switchView('editor')" class="bg-white text-blue-950 hover:bg-blue-50 font-bold px-6 py-3 rounded-2xl text-xs shadow-lg transition whitespace-nowrap">
+                    Open Full Goal Editor &rarr;
+                </button>
+            </section>
+
+            <!-- Quick Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Goals</p>
+                    <p id="stat-total-goals" class="text-3xl font-black text-slate-900 mt-1">0</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Achieved Goals</p>
+                    <p id="stat-completed-goals" class="text-3xl font-black text-emerald-600 mt-1">0</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Progress</p>
+                    <p id="stat-percent-goals" class="text-3xl font-black text-blue-900 mt-1">0%</p>
+                </div>
+            </div>
+
+            <!-- Quick Navigation to Sections -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div onclick="switchView('editor')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 cursor-pointer shadow-sm transition group">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold mb-3 group-hover:bg-blue-600 group-hover:text-white transition">🎯</div>
+                    <h3 class="font-bold text-slate-900 text-sm">Goals Manager</h3>
+                    <p class="text-xs text-slate-500 mt-1">Edit, add, and check off milestone targets.</p>
+                </div>
+                <div onclick="switchView('editor')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 cursor-pointer shadow-sm transition group">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold mb-3 group-hover:bg-indigo-600 group-hover:text-white transition">💡</div>
+                    <h3 class="font-bold text-slate-900 text-sm">Focus Areas & Principles</h3>
+                    <p class="text-xs text-slate-500 mt-1">Customize daily commitments and core beliefs.</p>
+                </div>
+                <div onclick="switchView('editor')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 cursor-pointer shadow-sm transition group">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold mb-3 group-hover:bg-emerald-600 group-hover:text-white transition">🗺️</div>
+                    <h3 class="font-bold text-slate-900 text-sm">Country Rankings</h3>
+                    <p class="text-xs text-slate-500 mt-1">Manage country lists with custom numbering.</p>
+                </div>
+                <div onclick="switchView('editor')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 cursor-pointer shadow-sm transition group">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold mb-3 group-hover:bg-amber-600 group-hover:text-white transition">✍️</div>
+                    <h3 class="font-bold text-slate-900 text-sm">Footer & Identity</h3>
+                    <p class="text-xs text-slate-500 mt-1">Personalize names, footer declarations & app titles.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FULL EDITOR & ROADMAP VIEW -->
+        <div id="view-editor" class="hidden space-y-8">
+            
+            <!-- Global Identity & Configuration Box -->
+            <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span>Global Identity & App Names</span>
+                    </h3>
+                    <button onclick="saveGlobalIdentity()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition">Save Identity</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">App Owner / Primary Name</label>
+                        <input type="text" id="input-owner-name" value="Irson" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Family Members (Comma separated)</label>
+                        <input type="text" id="input-family-names" value="Dad, Mom, Kelly" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Dashboard -->
+            <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Roadmap Progress Overview</h2>
+                        <p class="text-sm text-slate-500">Track milestones towards the ultimate future.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span id="progress-text" class="text-2xl font-black text-blue-900">0%</span>
+                        <span class="text-xs font-medium uppercase tracking-wider text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">Completed</span>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+                    <div id="progress-bar" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </section>
+
+            <!-- Filters and Search Bar -->
+            <section class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                    <button onclick="filterGoals('all')" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-blue-900 text-white shadow-sm transition" data-filter="all">All Goals</button>
+                    <button onclick="filterGoals('active')" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-filter="active">In Progress</button>
+                    <button onclick="filterGoals('completed')" class="filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition" data-filter="completed">Achieved</button>
+                </div>
+                <div class="w-full sm:w-72">
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Search goals..." class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                </div>
+            </section>
+
+            <!-- Goals List Section -->
+            <section id="goals-container" class="space-y-4">
+                <!-- Dynamic Cards inserted via JavaScript -->
+            </section>
+
+            <!-- Focus Areas & Core Principles Editor -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Focus Areas -->
+                <section class="bg-blue-50 border border-blue-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-blue-950 font-bold text-base flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span>Achieved by focusing on:</span>
+                            </h3>
+                            <button onclick="openFocusModal()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition">Edit Focus</button>
+                        </div>
+                        <ol id="focus-list-display" class="list-decimal list-inside space-y-2 text-slate-800 font-semibold text-sm pl-2">
+                            <!-- Rendered dynamically -->
+                        </ol>
+                    </div>
+                </section>
+
+                <!-- Core Principles & Daily Commitments -->
+                <section class="bg-indigo-50 border border-indigo-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-indigo-950 font-bold text-base flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                <span>Core Principles & Commitments</span>
+                            </h3>
+                            <button onclick="openPrinciplesModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition">Edit Principles</button>
+                        </div>
+                        <ul id="principles-list-display" class="space-y-2 text-slate-800 font-semibold text-sm pl-2">
+                            <!-- Rendered dynamically -->
+                        </ul>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Country Rankings & Numbers Editor -->
+            <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Country Rankings & Numbered Preferences</span>
+                    </h3>
+                    <button onclick="openCountryModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">Add / Edit Country</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase tracking-wider">
+                                <th class="p-3 rounded-l-xl">Rank #</th>
+                                <th class="p-3">Country Name</th>
+                                <th class="p-3">Status / Description</th>
+                                <th class="p-3 rounded-r-xl text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="country-table-body" class="divide-y divide-slate-100">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Footer Declarations Editor -->
+            <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2  0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                        <span>Footer Declarations Editor</span>
+                    </h3>
+                    <button onclick="openFooterModal()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition">Add Declaration</button>
+                </div>
+                <div id="footer-lines-container" class="space-y-2">
+                    <!-- Rendered dynamically -->
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Footer Declarations Rendered Section -->
+    <footer id="main-footer" class="bg-white border-t border-slate-200 py-8 px-4 text-center text-xs text-slate-500 space-y-1.5">
+        <!-- Rendered dynamically -->
+    </footer>
+
+    <!-- MODALS -->
+
+    <!-- Add/Edit Goal Modal -->
+    <div id="goal-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-goal-title" class="font-bold text-slate-900 text-lg">Add New Goal</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="goal-form" onsubmit="saveGoal(event)" class="space-y-4">
+                <input type="hidden" id="goal-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Goal Description</label>
+                    <textarea id="goal-text" rows="3" required placeholder="Enter detailed goal statement..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Target Date / Year</label>
+                    <input type="text" id="goal-target" required placeholder="e.g. October 1, 2027" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModals()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md transition">Save Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Focus Areas Modal -->
+    <div id="focus-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-900 text-lg">Edit Focus Areas</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Focus Areas (One per line)</label>
+                    <textarea id="focus-textarea" rows="5" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="closeModals()" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button onclick="saveFocusAreas()" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Principles Modal -->
+    <div id="principles-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-900 text-lg">Edit Core Principles</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Principles (One per line)</label>
+                    <textarea id="principles-textarea" rows="5" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="closeModals()" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button onclick="savePrinciples()" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Country Modal -->
+    <div id="country-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-country-title" class="font-bold text-slate-900 text-lg">Add Country Ranking</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <form id="country-form" onsubmit="saveCountry(event)" class="space-y-4">
+                <input type="hidden" id="country-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Rank Number</label>
+                    <input type="number" id="country-rank" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Country Name</label>
+                    <input type="text" id="country-name" required placeholder="e.g. United States" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Status / Description</label>
+                    <input type="text" id="country-desc" required placeholder="e.g. Primary residence & permanent home" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModals()" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold">Save Country</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Footer Modal -->
+    <div id="footer-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-footer-title" class="font-bold text-slate-900 text-lg">Add Footer Declaration</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <form id="footer-form" onsubmit="saveFooterLine(event)" class="space-y-4">
+                <input type="hidden" id="footer-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Declaration Text Statement</label>
+                    <textarea id="footer-text-input" rows="3" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModals()" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-xs font-semibold">Save Line</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-slate-950/30 backdrop-blur-xs hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center">
+            <h4 id="notification-title" class="font-bold text-slate-900 text-base mb-2">Notice</h4>
+            <p id="notification-message" class="text-xs text-slate-600 mb-5">Message goes here.</p>
+            <button onclick="closeNotification()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition">Got it</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT ENGINE -->
+    <script>
+        // Default Data States based on user input
+        const defaultState = {
+            ownerName: "Irson",
+            familyNames: "Dad, Mom, Kelly",
+            visibility: "private", // private, unlisted, public
+            goals: [
+                { id: 1, text: "All ears are good listening, healed, and able to hear more clearly.", target: "Present & Continuous", completed: false },
+                { id: 2, text: "The whole body is complete, perfect, functioning well, and normal.", target: "Present & Continuous", completed: false },
+                { id: 3, text: "Single, no girlfriend, live together with Dad, Mom, and Kelly, no need to think about girls anymore.", target: "Present & Continuous", completed: false },
+                { id: 4, text: "God has given us to live in the best country for us, which is live in the United States.", target: "Present & Continuous", completed: false },
+                { id: 5, text: "Finished Learning Web Development.", target: "October 1, 2027", completed: false },
+                { id: 6, text: "I want to work remotely for a U.S. company.", target: "November 30, 2027", completed: false },
+                { id: 7, text: "Get medical treatment for Grandma (Nainai) in the United States, so that Grandma stays healthy and lives a long life.", target: "October 1, 2028", completed: false },
+                { id: 8, text: "Buy a Tesla car to take road trips around New York, Long Island, Upstate, and out of state; travel around the United States, no need to travel abroad anymore.", target: "May 15, 2029", completed: false },
+                { id: 9, text: "Buy a home at 83-45 Vietor Avenue, Elmhurst, Queens, New York; live in the United States, the best country, no need to move, no need to think about other countries anymore.", target: "June 30, 2030", completed: false },
+                { id: 10, text: "We live and travel in the United States, visit family in Indonesia; only 2 countries, no need to go anywhere else abroad.", target: "January 1, 2035", completed: false }
+            ],
+            focusAreas: [
+                "Learning Web Development",
+                "Learning English",
+                "Learning Chinese (Simplified)"
+            ],
+            principles: [
+                "Daily consistent dedication and focus",
+                "Absolute gratitude and mental clarity",
+                "Continuous tracking and milestone review"
+            ],
+            countries: [
+                { id: 1, rank: 1, name: "United States", desc: "The ultimate permanent home, country of residence & lifestyle" },
+                { id: 2, rank: 2, name: "Indonesia", desc: "Family roots and occasional visits" }
+            ],
+            footerLines: [
+                "I want this to become real in the future in Irson's Goal.",
+                "All of this is completely true in Irson's Goal.",
+                "Dad, Mom, Kelly, and I all remember this very well in Irson's Goal.",
+                "I want these dreams to be achieved in Irson's Goal."
+            ]
+        };
+
+        // Load from LocalStorage or Fallback
+        let appData = JSON.parse(localStorage.getItem('irson_pro_suite_data')) || defaultState;
+        let currentView = 'dashboard'; // 'dashboard' or 'editor'
+        let currentMode = 'view'; // 'view' or 'edit'
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        // Save State Utility
+        function saveData() {
+            localStorage.setItem('irson_pro_suite_data', JSON.stringify(appData));
+            renderAll();
+        }
+
+        // View Management (Dashboard vs Editor Home)
+        function switchView(viewName) {
+            currentView = viewName;
+            const dash = document.getElementById('view-dashboard');
+            const editor = document.getElementById('view-editor');
+            if (viewName === 'dashboard') {
+                dash.classList.remove('hidden');
+                editor.classList.add('hidden');
+            } else {
+                dash.classList.add('hidden');
+                editor.classList.remove('hidden');
+            }
+            renderAll();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Mode Switching in Editor
+        function setMode(mode) {
+            currentMode = mode;
+            const viewBtn = document.getElementById('btn-view-mode');
+            const editBtn = document.getElementById('btn-edit-mode');
+            const addBtn = document.getElementById('btn-add-goal');
+
+            if (mode === 'view') {
+                viewBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-blue-900 shadow-sm";
+                editBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                addBtn.classList.add('hidden');
+            } else {
+                editBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-blue-900 shadow-sm";
+                viewBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                addBtn.classList.remove('hidden');
+            }
+            renderGoalsList();
+            renderCountryTable();
+            renderFooterLines();
+        }
+
+        // Visibility Selector Update
+        function updateVisibility(val) {
+            appData.visibility = val;
+            saveData();
+            showNotification("Visibility Updated", `Roadmap is now set to ${val.toUpperCase()}.`);
+        }
+
+        // Save Global Identity
+        function saveGlobalIdentity() {
+            appData.ownerName = document.getElementById('input-owner-name').value;
+            appData.familyNames = document.getElementById('input-family-names').value;
+            saveData();
+            showNotification("Saved", "Global identity names updated successfully.");
+        }
+
+        // Master Render Engine
+        function renderAll() {
+            document.getElementById('hero-welcome-name').innerText = `${appData.ownerName}'s Goal Roadmap Suite`;
+            document.getElementById('input-owner-name').value = appData.ownerName;
+            document.getElementById('input-family-names').value = appData.familyNames;
+            document.getElementById('visibility-selector').value = appData.visibility;
+
+            // Stats
+            const total = appData.goals.length;
+            const completed = appData.goals.filter(g => g.completed).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('stat-total-goals').innerText = total;
+            document.getElementById('stat-completed-goals').innerText = completed;
+            document.getElementById('stat-percent-goals').innerText = percent + '%';
+
+            // Progress Bar
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-text').innerText = percent + '%';
+
+            renderGoalsList();
+            renderFocusList();
+            renderPrinciplesList();
+            renderCountryTable();
+            renderFooterLines();
+        }
+
+        // Goals Rendering
+        function renderGoalsList() {
+            const container = document.getElementById('goals-container');
+            container.innerHTML = '';
+
+            let filtered = appData.goals.filter(goal => {
+                const matchesSearch = goal.text.toLowerCase().includes(searchQuery.toLowerCase()) || goal.target.toLowerCase().includes(searchQuery.toLowerCase());
+                if (currentFilter === 'active') return !goal.completed && matchesSearch;
+                if (currentFilter === 'completed') return goal.completed && matchesSearch;
+                return matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center border border-slate-200 text-slate-400 text-xs">No goals found matching your criteria.</div>`;
+                return;
+            }
+
+            filtered.forEach(goal => {
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl p-5 border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm ${goal.completed ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 hover:border-blue-300'}`;
+                
+                let actionBtns = '';
+                if (currentMode === 'edit') {
+                    actionBtns = `
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <button onclick="openGoalModal(${goal.id})" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">Edit</button>
+                            <button onclick="deleteGoal(${goal.id})" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition">Delete</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-start space-x-3.5 flex-grow">
+                        <input type="checkbox" ${goal.completed ? 'checked' : ''} onclick="toggleGoalComplete(${goal.id})" class="mt-1 w-5 h-5 text-blue-600 rounded cursor-pointer accent-blue-600">
+                        <div>
+                            <p class="text-sm font-medium ${goal.completed ? 'line-through text-slate-400' : 'text-slate-800'}">${escapeHtml(goal.text)}</p>
+                            <div class="mt-2 flex items-center space-x-2">
+                                <span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-100">Target: ${escapeHtml(goal.target)}</span>
+                                ${goal.completed ? '<span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">Achieved</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${actionBtns}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Focus Areas Render & Save
+        function renderFocusList() {
+            const list = document.getElementById('focus-list-display');
+            list.innerHTML = '';
+            appData.focusAreas.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "hover:text-blue-700 transition";
+                li.innerText = item;
+                list.appendChild(li);
+            });
+        }
+        function openFocusModal() {
+            document.getElementById('focus-textarea').value = appData.focusAreas.join('\n');
+            document.getElementById('focus-modal').classList.remove('hidden');
+        }
+        function saveFocusAreas() {
+            const val = document.getElementById('focus-textarea').value;
+            appData.focusAreas = val.split('\n').map(s => s.trim()).filter(Boolean);
+            closeModals();
+            saveData();
+        }
+
+        // Principles Render & Save
+        function renderPrinciplesList() {
+            const list = document.getElementById('principles-list-display');
+            list.innerHTML = '';
+            appData.principles.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "flex items-center space-x-2";
+                li.innerHTML = `<span class="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span><span>${escapeHtml(item)}</span>`;
+                list.appendChild(li);
+            });
+        }
+        function openPrinciplesModal() {
+            document.getElementById('principles-textarea').value = appData.principles.join('\n');
+            document.getElementById('principles-modal').classList.remove('hidden');
+        }
+        function savePrinciples() {
+            const val = document.getElementById('principles-textarea').value;
+            appData.principles = val.split('\n').map(s => s.trim()).filter(Boolean);
+            closeModals();
+            saveData();
+        }
+
+        // Country Rankings Render & CRUD
+        function renderCountryTable() {
+            const tbody = document.getElementById('country-table-body');
+            tbody.innerHTML = '';
+            appData.countries.sort((a,b) => a.rank - b.rank).forEach(c => {
+                let act = '';
+                if (currentMode === 'edit') {
+                    act = `
+                        <div class="flex items-center justify-end space-x-2">
+                            <button onclick="openCountryModal(${c.id})" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Edit</button>
+                            <button onclick="deleteCountry(${c.id})" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold">Del</button>
+                        </div>
+                    `;
+                }
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-emerald-800">#${c.rank}</td>
+                    <td class="p-3 font-semibold text-slate-900">${escapeHtml(c.name)}</td>
+                    <td class="p-3 text-slate-600">${escapeHtml(c.desc)}</td>
+                    <td class="p-3 text-right">${act}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        function openCountryModal(id = null) {
+            const modal = document.getElementById('country-modal');
+            modal.classList.remove('hidden');
+            if (id) {
+                document.getElementById('modal-country-title').innerText = "Edit Country Ranking";
+                const c = appData.countries.find(x => x.id === id);
+                document.getElementById('country-id').value = c.id;
+                document.getElementById('country-rank').value = c.rank;
+                document.getElementById('country-name').value = c.name;
+                document.getElementById('country-desc').value = c.desc;
+            } else {
+                document.getElementById('modal-country-title').innerText = "Add Country Ranking";
+                document.getElementById('country-form').reset();
+                document.getElementById('country-id').value = '';
+                document.getElementById('country-rank').value = appData.countries.length + 1;
+            }
+        }
+        function saveCountry(e) {
+            e.preventDefault();
+            const id = document.getElementById('country-id').value;
+            const rank = parseInt(document.getElementById('country-rank').value);
+            const name = document.getElementById('country-name').value;
+            const desc = document.getElementById('country-desc').value;
+
+            if (id) {
+                const c = appData.countries.find(x => x.id == id);
+                c.rank = rank; c.name = name; c.desc = desc;
+            } else {
+                appData.countries.push({ id: Date.now(), rank, name, desc });
+            }
+            closeModals();
+            saveData();
+        }
+        function deleteCountry(id) {
+            appData.countries = appData.countries.filter(x => x.id !== id);
+            saveData();
+        }
+
+        // Footer Declarations Render & CRUD
+        function renderFooterLines() {
+            const container = document.getElementById('footer-lines-container');
+            const footerEl = document.getElementById('main-footer');
+            container.innerHTML = '';
+            footerEl.innerHTML = '';
+
+            appData.footerLines.forEach((line, idx) => {
+                const p = document.createElement('p');
+                p.className = "font-medium text-slate-700";
+                p.innerText = line;
+                footerEl.appendChild(p);
+
+                if (currentMode === 'edit') {
+                    const card = document.createElement('div');
+                    card.className = "flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs";
+                    card.innerHTML = `
+                        <span class="font-medium text-slate-800">${escapeHtml(line)}</span>
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <button onclick="openFooterModal(${idx})" class="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 rounded-lg font-semibold">Edit</button>
+                            <button onclick="deleteFooterLine(${idx})" class="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-lg font-semibold">Del</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            });
+
+            if (currentMode !== 'edit') {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">Switch to Editor Mode to add, edit, or delete footer declaration lines.</p>`;
+            }
+        }
+        function openFooterModal(index = null) {
+            const modal = document.getElementById('footer-modal');
+            modal.classList.remove('hidden');
+            if (index !== null) {
+                document.getElementById('modal-footer-title').innerText = "Edit Footer Declaration";
+                document.getElementById('footer-id').value = index;
+                document.getElementById('footer-text-input').value = appData.footerLines[index];
+            } else {
+                document.getElementById('modal-footer-title').innerText = "Add Footer Declaration";
+                document.getElementById('footer-form').reset();
+                document.getElementById('footer-id').value = '';
+            }
+        }
+        function saveFooterLine(e) {
+            e.preventDefault();
+            const idx = document.getElementById('footer-id').value;
+            const text = document.getElementById('footer-text-input').value;
+            if (idx !== "") {
+                appData.footerLines[idx] = text;
+            } else {
+                appData.footerLines.push(text);
+            }
+            closeModals();
+            saveData();
+        }
+        function deleteFooterLine(idx) {
+            appData.footerLines.splice(idx, 1);
+            saveData();
+        }
+
+        // Goal CRUD Modals
+        function openGoalModal(id = null) {
+            const modal = document.getElementById('goal-modal');
+            modal.classList.remove('hidden');
+            if (id) {
+                document.getElementById('modal-goal-title').innerText = "Edit Goal";
+                const goal = appData.goals.find(g => g.id === id);
+                document.getElementById('goal-id').value = goal.id;
+                document.getElementById('goal-text').value = goal.text;
+                document.getElementById('goal-target').value = goal.target;
+            } else {
+                document.getElementById('modal-goal-title').innerText = "Add New Goal";
+                document.getElementById('goal-form').reset();
+                document.getElementById('goal-id').value = '';
+            }
+        }
+        function saveGoal(e) {
+            e.preventDefault();
+            const id = document.getElementById('goal-id').value;
+            const text = document.getElementById('goal-text').value;
+            const target = document.getElementById('goal-target').value;
+
+            if (id) {
+                const goal = appData.goals.find(g => g.id == id);
+                if (goal) { goal.text = text; goal.target = target; }
+            } else {
+                appData.goals.push({ id: Date.now(), text, target, completed: false });
+            }
+            closeModals();
+            saveData();
+        }
+        function deleteGoal(id) {
+            appData.goals = appData.goals.filter(g => g.id !== id);
+            saveData();
+        }
+        function toggleGoalComplete(id) {
+            const goal = appData.goals.find(g => g.id === id);
+            if (goal) { goal.completed = !goal.completed; saveData(); }
+        }
+
+        // Filters and Search
+        function filterGoals(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.className = "filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-blue-900 text-white shadow-sm transition";
+                } else {
+                    btn.className = "filter-btn px-4 py-2 rounded-xl text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition";
+                }
+            });
+            renderGoalsList();
+        }
+        function handleSearch() {
+            searchQuery = document.getElementById('search-input').value;
+            renderGoalsList();
+        }
+
+        // Modals & Notifications Utilities
+        function closeModals() {
+            document.querySelectorAll('.fixed').forEach(m => {
+                if(m.id !== 'notification-modal') m.classList.add('hidden');
+            });
+        }
+        function showNotification(title, message) {
+            document.getElementById('notification-title').innerText = title;
+            document.getElementById('notification-message').innerText = message;
+            document.getElementById('notification-modal').classList.remove('hidden');
+        }
+        function closeNotification() {
+            document.getElementById('notification-modal').classList.add('hidden');
+        }
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Initial Boot
+        renderAll();
+    </script>
+</body>
+</html>
